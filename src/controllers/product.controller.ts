@@ -5,6 +5,8 @@ import {
     createProduct,
     getAllProducts,
     getProductById,
+    updateProduct,
+    deleteProduct,
 } from '../services/product.services';
 
 /**
@@ -33,4 +35,24 @@ export const getById = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const product = await getProductById(id as string);
     res.status(200).json({ success: true, data: product });
+});
+
+/**
+ * PUT /api/products/:id
+ * Protected — update an existing product (partial update supported).
+ */
+export const update = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { id } = req.params;
+    const product = await updateProduct(id as string, req.body);
+    res.status(200).json({ success: true, message: 'Product updated successfully.', data: product });
+});
+
+/**
+ * DELETE /api/products/:id
+ * Protected — permanently delete a product.
+ */
+export const remove = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { id } = req.params;
+    await deleteProduct(id as string);
+    res.status(200).json({ success: true, message: 'Product deleted successfully.' });
 });

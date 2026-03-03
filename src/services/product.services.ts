@@ -1,5 +1,5 @@
 import Product from '../models/product.model';
-import { CreateProductInput, ProductQuery, IProduct } from '../types';
+import { CreateProductInput, UpdateProductInput, ProductQuery, IProduct } from '../types';
 import AppError from '../utils/AppError';
 
 
@@ -74,3 +74,26 @@ export const getProductById = async (id: string): Promise<IProduct> => {
     if (!product) throw new AppError('Product not found.', 404);
     return product;
 }
+
+export const updateProduct = async (id: string, input: UpdateProductInput): Promise<IProduct> => {
+    // If SKU is being changed, ensure it doesn't clash with another product
+    if (input.sku) {
+        const existing = await Product.findOne({
+            sku: input.sku.toUpperCase(),
+            _id: { $ne: id },
+        });
+        if (existing) throw new AppError(`Product with SKU '${input.sku.toUpperCase()}' already exists.`, 409);
+        input.sku = input.sku.toUpperCase();
+    }
+
+    const product = await Product.findByIdAndUpdate(id, { $set: input }, { new: true, runValidators: true })
+        .populate('createdBy', 'fullName email');
+
+    if (!product) throw new AppError('Product not found.', 404);
+    return product;
+};
+
+export const deleteProduct = async (id: string): Promise<void> => {
+    const product = await Product.findByIdAndDelete(id);
+    if (!product) throw new AppError('Product not found.', 404);
+};

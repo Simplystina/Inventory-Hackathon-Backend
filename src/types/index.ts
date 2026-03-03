@@ -74,6 +74,18 @@ export interface CreateProductInput {
     sku?: string;
 }
 
+export interface UpdateProductInput {
+    name?: string;
+    description?: string;
+    price?: number;
+    cost?: number;
+    quantity?: number;
+    lowStockAlert?: number;
+    category?: string;
+    sku?: string;
+    isActive?: boolean;
+}
+
 export interface ProductQuery {
     page?: number;
     limit?: number;
@@ -99,7 +111,7 @@ export interface ISaleHistory {
     _id: string;
     transactionId: string;
     date: Date;
-    time: string;          
+    time: string;
     items: SaleItem[];
     total: number;
     payment: PaymentMethod;
@@ -116,15 +128,15 @@ export interface CreateSaleInput {
         unitPrice: number;
     }[];
     payment: PaymentMethod;
-    date?: string;        
-    time?: string;         
+    date?: string;
+    time?: string;
 }
 
 export interface SaleQuery {
     page?: number;
     limit?: number;
     payment?: PaymentMethod;
-    from?: string;         
-    to?: string;           
-    search?: string;       
+    from?: string;
+    to?: string;
+    search?: string;
 }
