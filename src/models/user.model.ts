@@ -29,6 +29,14 @@ const userSchema = new mongoose.Schema<IUser>(
             enum: ['admin', 'manager', 'staff'],
             default: 'staff',
         },
+        phoneNumber: {
+            type: String,
+            trim: true,
+        },
+        businessAddress: {
+            type: String,
+            trim: true,
+        },
         refreshToken: {
             type: String,
             select: false,

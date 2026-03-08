@@ -21,7 +21,7 @@ export const generateTokens = (payload: AuthPayload): TokenPair => {
 
 
 export const registerUser = async (input: RegisterInput): Promise<AuthResult> => {
-    const { name, email, password, role } = input;
+    const { name, email, password, role, phoneNumber, businessAddress } = input;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) throw new AppError('An account with this email already exists.', 409);
@@ -29,7 +29,7 @@ export const registerUser = async (input: RegisterInput): Promise<AuthResult> =>
     const saltRounds = Number(process.env.BCRYPT_SALT_ROUNDS) || 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const user = await User.create({ fullName: name, email, password: hashedPassword, role });
+    const user = await User.create({ fullName: name, email, password: hashedPassword, role, phoneNumber, businessAddress });
 
     const payload: AuthPayload = {
         userId: (user._id as string).toString(),
@@ -110,6 +110,31 @@ export const getUserProfile = async (userId: string) => {
         name: user.fullName,
         email: user.email,
         role: user.role,
+        phoneNumber: user.phoneNumber,
+        businessAddress: user.businessAddress,
+        createdAt: user.createdAt,
+    };
+};
+
+
+export const updateUserProfile = async (
+    userId: string,
+    input: { fullName?: string; phoneNumber?: string; businessAddress?: string }
+) => {
+    const user = await User.findByIdAndUpdate(
+        userId,
+        { $set: input },
+        { new: true, runValidators: true }
+    );
+    if (!user) throw new AppError('User not found.', 404);
+
+    return {
+        id: user._id,
+        name: user.fullName,
+        email: user.email,
+        role: user.role,
+        phoneNumber: user.phoneNumber,
+        businessAddress: user.businessAddress,
         createdAt: user.createdAt,
     };
 };

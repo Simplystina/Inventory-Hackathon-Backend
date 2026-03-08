@@ -5,6 +5,7 @@ import {
     refreshToken,
     getMe,
     logout,
+    updateProfile,
 } from '../controllers/auth.controller';
 import { protect } from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validate.middleware';
@@ -12,6 +13,7 @@ import {
     registerSchema,
     loginSchema,
     refreshTokenSchema,
+    updateProfileSchema,
 } from '../validations/auth.validation';
 
 const router = Router();
@@ -23,6 +25,7 @@ router.post('/refresh', validate(refreshTokenSchema), refreshToken);
 
 // Protected routes
 router.get('/me', protect, getMe);
+router.put('/profile', protect, validate(updateProfileSchema), updateProfile);
 router.post('/logout', protect, logout);
 
 export default router;

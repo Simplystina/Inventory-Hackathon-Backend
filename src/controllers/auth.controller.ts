@@ -6,6 +6,7 @@ import {
     loginUser,
     refreshUserTokens,
     getUserProfile,
+    updateUserProfile,
     logoutUser,
 } from '../services/auth.services';
 
@@ -47,4 +48,14 @@ export const getMe = asyncHandler(async (req: AuthRequest, res: Response) => {
 export const logout = asyncHandler(async (req: AuthRequest, res: Response) => {
     await logoutUser(req.user!.userId);
     res.status(200).json({ success: true, message: 'Logged out successfully.' });
+});
+
+/**
+ * PUT /api/auth/profile
+ * Protected — update name, phone number, and/or business address.
+ */
+export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { fullName, phoneNumber, businessAddress } = req.body;
+    const profile = await updateUserProfile(req.user!.userId, { fullName, phoneNumber, businessAddress });
+    res.status(200).json({ success: true, message: 'Profile updated successfully.', data: profile });
 });

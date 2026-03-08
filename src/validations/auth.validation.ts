@@ -32,6 +32,15 @@ export const registerSchema = Joi.object({
     role: Joi.string().valid('admin', 'manager').default('admin').messages({
         'any.only': 'Role must be one of: admin, manager',
     }),
+
+    phoneNumber: Joi.string().trim().max(20).required().messages({
+        'string.max': 'Phone number cannot exceed 20 characters',
+        'any.required': 'Phone number is required',
+    }),
+
+    businessAddress: Joi.string().trim().required().messages({
+        'any.required': 'Business address is required',
+    }),
 });
 
 export const loginSchema = Joi.object({
@@ -52,4 +61,17 @@ export const refreshTokenSchema = Joi.object({
         'string.empty': 'Refresh token is required',
         'any.required': 'Refresh token is required',
     }),
+});
+
+export const updateProfileSchema = Joi.object({
+    fullName: Joi.string().min(2).max(100).trim().optional().messages({
+        'string.min': 'Name must be at least 2 characters',
+        'string.max': 'Name cannot exceed 100 characters',
+    }),
+    phoneNumber: Joi.string().trim().max(20).optional().messages({
+        'string.max': 'Phone number cannot exceed 20 characters',
+    }),
+    businessAddress: Joi.string().trim().optional(),
+}).min(1).messages({
+    'object.min': 'At least one field must be provided to update',
 });

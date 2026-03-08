@@ -6,6 +6,8 @@ import {
     getAllSales,
     getSaleById,
     getSaleByTransactionId,
+    updateSale,
+    deleteSale,
 } from '../services/saleHistory.services';
 
 /**
@@ -44,4 +46,24 @@ export const getByTransactionId = asyncHandler(async (req: AuthRequest, res: Res
     const txnId = req.params.txnId as string;
     const sale = await getSaleByTransactionId(txnId);
     res.status(200).json({ success: true, data: sale });
+});
+
+/**
+ * PUT /api/sales/:id
+ * Protected — update an existing sale record (items, payment, date, time).
+ */
+export const update = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { id } = req.params;
+    const sale = await updateSale(id as string, req.body);
+    res.status(200).json({ success: true, message: 'Sale updated successfully.', data: sale });
+});
+
+/**
+ * DELETE /api/sales/:id
+ * Protected — delete a sale record and restore inventory.
+ */
+export const remove = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { id } = req.params;
+    await deleteSale(id as string);
+    res.status(200).json({ success: true, message: 'Sale deleted successfully.' });
 });

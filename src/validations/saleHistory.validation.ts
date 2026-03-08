@@ -1,11 +1,19 @@
 import Joi from 'joi';
+import mongoose from 'mongoose';
 
+const objectId = Joi.string().custom((value, helpers) => {
+    if (!mongoose.Types.ObjectId.isValid(value)) {
+        return helpers.error('any.invalid');
+    }
+    return value;
+}).messages({
+    'any.invalid': 'Must be a valid product ID',
+    'string.empty': 'Product ID is required',
+    'any.required': 'Product ID is required',
+});
 
 const saleItemSchema = Joi.object({
-    productId: Joi.string().required().messages({
-        'string.empty': 'Product ID is required',
-        'any.required': 'Product ID is required',
-    }),
+    productId: objectId.required(),
     name: Joi.string().trim().required().messages({
         'string.empty': 'Product name is required',
         'any.required': 'Product name is required',
@@ -54,4 +62,36 @@ export const getSalesQuerySchema = Joi.object({
     from: Joi.string().isoDate().optional(),
     to: Joi.string().isoDate().optional(),
     search: Joi.string().trim().optional(),
+});
+
+const updateSaleItemSchema = Joi.object({
+    productId: objectId.required(),
+    name: Joi.string().trim().required().messages({
+        'any.required': 'Product name is required',
+    }),
+    quantity: Joi.number().integer().min(1).required().messages({
+        'number.min': 'Quantity must be at least 1',
+        'any.required': 'Quantity is required',
+    }),
+    unitPrice: Joi.number().min(0).required().messages({
+        'number.min': 'Unit price cannot be negative',
+        'any.required': 'Unit price is required',
+    }),
+});
+
+export const updateSaleSchema = Joi.object({
+    items: Joi.array().items(updateSaleItemSchema).min(1).optional().messages({
+        'array.min': 'At least one item is required',
+    }),
+    payment: Joi.string().valid('cash', 'card', 'transfer', 'other').optional().messages({
+        'any.only': "Payment must be 'cash', 'card', 'transfer', or 'other'",
+    }),
+    date: Joi.string().isoDate().optional().messages({
+        'string.isoDate': 'Date must be a valid ISO 8601 string',
+    }),
+    time: Joi.string().pattern(/^\d{2}:\d{2}$/).optional().messages({
+        'string.pattern.base': 'Time must be in HH:MM format',
+    }),
+}).min(1).messages({
+    'object.min': 'At least one field must be provided to update',
 });

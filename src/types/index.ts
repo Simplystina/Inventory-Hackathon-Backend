@@ -7,6 +7,8 @@ export interface IUser {
     email: string;
     password: string;
     role: 'admin' | 'manager' | 'staff';
+    phoneNumber?: string;
+    businessAddress?: string;
     refreshToken?: string;
     createdAt: Date;
     updatedAt: Date;
@@ -32,6 +34,8 @@ export interface RegisterInput {
     email: string;
     password: string;
     role?: 'admin' | 'manager' | 'staff';
+    phoneNumber?: string;
+    businessAddress?: string;
 }
 
 export interface LoginInput {
