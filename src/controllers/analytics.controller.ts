@@ -9,7 +9,8 @@ import { analyticsQuerySchema } from '../validations/analytics.validation';
  * Protected — returns revenue, orders, items sold, and total stock with % change.
  */
 export const analytics = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const data = await getAnalytics(req.query.period as 'today' | 'week' | 'month' | 'year');
+     const {userId} = req.user as {userId: string}
+    const data = await getAnalytics(req.query.period as 'today' | 'week' | 'month' | 'year', userId);
     res.status(200).json({ success: true, data });
 });
 

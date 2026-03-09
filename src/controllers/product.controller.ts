@@ -23,7 +23,9 @@ export const create = asyncHandler(async (req: AuthRequest, res: Response) => {
  * Public — returns paginated list of products.
  */
 export const getAll = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const result = await getAllProducts(req.query as never);
+    //console.log(req.user);
+    const userId = req?.user?.userId as string
+    const result = await getAllProducts(req.query, userId);
     res.status(200).json({ success: true, data: result });
 });
 
@@ -33,7 +35,8 @@ export const getAll = asyncHandler(async (req: AuthRequest, res: Response) => {
  */
 export const getById = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
-    const product = await getProductById(id as string);
+    const {userId} = req.user as {userId: string}
+    const product = await getProductById(id as string, userId);
     res.status(200).json({ success: true, data: product });
 });
 
@@ -43,7 +46,8 @@ export const getById = asyncHandler(async (req: AuthRequest, res: Response) => {
  */
 export const update = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
-    const product = await updateProduct(id as string, req.body);
+    const {userId} = req.user as {userId:string}
+    const product = await updateProduct(id as string, req.body, userId);
     res.status(200).json({ success: true, message: 'Product updated successfully.', data: product });
 });
 
@@ -53,6 +57,7 @@ export const update = asyncHandler(async (req: AuthRequest, res: Response) => {
  */
 export const remove = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
-    await deleteProduct(id as string);
+    const {userId} = req.user as {userId:string}
+    await deleteProduct(id as string, userId);
     res.status(200).json({ success: true, message: 'Product deleted successfully.' });
 });

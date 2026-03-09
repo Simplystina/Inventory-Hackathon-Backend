@@ -59,9 +59,9 @@ interface PeriodMetrics {
     totalItemsSold: number;
 }
 
-const getMetricsForRange = async (start: Date, end: Date): Promise<PeriodMetrics> => {
+const getMetricsForRange = async (start: Date, end: Date, userId:string): Promise<PeriodMetrics> => {
     const [result] = await SaleHistory.aggregate([
-        { $match: { date: { $gte: start, $lte: end } } },
+        { $match: { date: { $gte: start, $lte: end }, soldBy: userId } },
         {
             $group: {
                 _id: null,
@@ -79,29 +79,27 @@ const getMetricsForRange = async (start: Date, end: Date): Promise<PeriodMetrics
     };
 };
 
-export const getAnalytics = async (period: Period = 'month') => {
+export const getAnalytics = async (period: Period = 'month', userId: string) => {
     const { currentStart, currentEnd, previousStart, previousEnd } = getPeriodRanges(period);
 
-    const [current, previous] = await Promise.all([
-        getMetricsForRange(currentStart, currentEnd),
-        getMetricsForRange(previousStart, previousEnd),
+    // Run all 4 queries concurrently
+    const [current, previous, stockResult, paymentResult] = await Promise.all([
+        getMetricsForRange(currentStart, currentEnd, userId),
+        getMetricsForRange(previousStart, previousEnd, userId),
+        Product.aggregate([
+            { $match: { isActive: true, soldBy: userId } },
+            { $group: { _id: null, totalStock: { $sum: '$quantity' } } },
+        ]),
+        SaleHistory.aggregate([
+            { $match: { date: { $gte: currentStart, $lte: currentEnd }, payment: { $exists: true, $ne: null }, soldBy: userId } },
+            { $group: { _id: '$payment', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 1 },
+        ]),
     ]);
 
-    // Total stock across all active products
-    const [stockResult] = await Product.aggregate([
-        { $match: { isActive: true } },
-        { $group: { _id: null, totalStock: { $sum: '$quantity' } } },
-    ]);
-    const totalStock: number = stockResult?.totalStock ?? 0;
-
-    // Most used payment method for current period
-    const [paymentResult] = await SaleHistory.aggregate([
-        { $match: { date: { $gte: currentStart, $lte: currentEnd }, payment: { $exists: true, $ne: null } } },
-        { $group: { _id: '$payment', count: { $sum: 1 } } },
-        { $sort: { count: -1 } },
-        { $limit: 1 }
-    ]);
-    const topPaymentMethod: string | null = paymentResult?._id ?? null;
+    const totalStock: number = stockResult[0]?.totalStock ?? 0;
+    const topPaymentMethod: string | null = paymentResult[0]?._id ?? null;
 
     return {
         period,

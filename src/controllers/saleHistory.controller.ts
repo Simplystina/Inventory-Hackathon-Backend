@@ -24,7 +24,8 @@ export const create = asyncHandler(async (req: AuthRequest, res: Response) => {
  * Protected — returns paginated sales history.
  */
 export const getAll = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const result = await getAllSales(req.query as never);
+     const {userId} = req.user as {userId: string}
+    const result = await getAllSales(req.query, userId);
     res.status(200).json({ success: true, data: result });
 });
 
@@ -34,7 +35,8 @@ export const getAll = asyncHandler(async (req: AuthRequest, res: Response) => {
  */
 export const getById = asyncHandler(async (req: AuthRequest, res: Response) => {
     const id = req.params.id as string;
-    const sale = await getSaleById(id);
+    const {userId} = req.user as {userId: string}
+    const sale = await getSaleById(id, userId);
     res.status(200).json({ success: true, data: sale });
 });
 
@@ -44,7 +46,8 @@ export const getById = asyncHandler(async (req: AuthRequest, res: Response) => {
  */
 export const getByTransactionId = asyncHandler(async (req: AuthRequest, res: Response) => {
     const txnId = req.params.txnId as string;
-    const sale = await getSaleByTransactionId(txnId);
+     const {userId} = req.user as {userId: string}
+    const sale = await getSaleByTransactionId(txnId, userId);
     res.status(200).json({ success: true, data: sale });
 });
 
@@ -54,7 +57,8 @@ export const getByTransactionId = asyncHandler(async (req: AuthRequest, res: Res
  */
 export const update = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
-    const sale = await updateSale(id as string, req.body);
+     const {userId} = req.user as {userId: string}
+    const sale = await updateSale(id as string, req.body, userId);
     res.status(200).json({ success: true, message: 'Sale updated successfully.', data: sale });
 });
 
@@ -64,6 +68,7 @@ export const update = asyncHandler(async (req: AuthRequest, res: Response) => {
  */
 export const remove = asyncHandler(async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
+     const {userId} = req.user as {userId: string}
     await deleteSale(id as string);
     res.status(200).json({ success: true, message: 'Sale deleted successfully.' });
 });

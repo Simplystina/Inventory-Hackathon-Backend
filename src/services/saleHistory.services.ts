@@ -73,7 +73,7 @@ export interface PaginatedSales {
     totalPages: number;
 }
 
-export const getAllSales = async (query: SaleQuery): Promise<PaginatedSales> => {
+export const getAllSales = async (query: SaleQuery, userId: string): Promise<PaginatedSales> => {
     const { page = 1, limit = 10, payment, from, to, search } = query;
     const skip = (Number(page) - 1) * Number(limit);
 
@@ -97,12 +97,12 @@ export const getAllSales = async (query: SaleQuery): Promise<PaginatedSales> => 
     }
 
     const [sales, total] = await Promise.all([
-        SaleHistory.find(filter)
+        SaleHistory.find({...filter, soldBy: userId})
             .populate('soldBy', 'fullName email')
             .sort({ date: -1, time: -1 })
             .skip(skip)
             .limit(Number(limit)),
-        SaleHistory.countDocuments(filter),
+        SaleHistory.countDocuments({...filter, soldBy: userId}),
     ]);
 
     return {
@@ -115,14 +115,14 @@ export const getAllSales = async (query: SaleQuery): Promise<PaginatedSales> => 
 
 
 
-export const getSaleById = async (id: string): Promise<ISaleHistory> => {
-    const sale = await SaleHistory.findById(id).populate('soldBy', 'fullName email');
+export const getSaleById = async (id: string, userId: string): Promise<ISaleHistory> => {
+    const sale = await SaleHistory.findOne({ _id: id, soldBy: userId }).populate('soldBy', 'fullName email');
     if (!sale) throw new AppError('Sale record not found.', 404);
     return sale;
 };
 
-export const getSaleByTransactionId = async (transactionId: string): Promise<ISaleHistory> => {
-    const sale = await SaleHistory.findOne({ transactionId: transactionId.toUpperCase() }).populate(
+export const getSaleByTransactionId = async (transactionId: string, userId: string): Promise<ISaleHistory> => {
+    const sale = await SaleHistory.findOne({ transactionId: transactionId.toUpperCase(), soldBy: userId }).populate(
         'soldBy',
         'fullName email'
     );
@@ -132,9 +132,10 @@ export const getSaleByTransactionId = async (transactionId: string): Promise<ISa
 
 export const updateSale = async (
     id: string,
-    input: Partial<Pick<CreateSaleInput, 'items' | 'payment' | 'date' | 'time'>>
+    input: Partial<Pick<CreateSaleInput, 'items' | 'payment' | 'date' | 'time'>>,
+    userId: string
 ): Promise<ISaleHistory> => {
-    const existing = await SaleHistory.findById(id);
+    const existing = await SaleHistory.findOne({ _id: id, soldBy: userId });
     if (!existing) throw new AppError('Sale record not found.', 404);
 
     // If items are being updated, reconcile inventory

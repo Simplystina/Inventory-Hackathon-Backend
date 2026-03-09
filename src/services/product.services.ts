@@ -24,7 +24,7 @@ export interface PaginatedProducts {
     totalPages: number;
 }
 
-export const getAllProducts = async (query: ProductQuery): Promise<PaginatedProducts> => {
+export const getAllProducts = async (query: ProductQuery, userId: string): Promise<PaginatedProducts> => {
     const { page = 1, limit = 10, category, search, isActive, stockStatus } = query;
     const skip = (page - 1) * limit;
 
@@ -53,12 +53,12 @@ export const getAllProducts = async (query: ProductQuery): Promise<PaginatedProd
     }
 
     const [products, total] = await Promise.all([
-        Product.find(filter)
+        Product.find({ ...filter, createdBy: userId })
             .populate('createdBy', 'fullName email')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit),
-        Product.countDocuments(filter),
+        Product.countDocuments({ ...filter, createdBy: userId }),
     ]);
 
     return {
@@ -69,13 +69,13 @@ export const getAllProducts = async (query: ProductQuery): Promise<PaginatedProd
     };
 };
 
-export const getProductById = async (id: string): Promise<IProduct> => {
-    const product = await Product.findById(id).populate('createdBy', 'fullName email');
+export const getProductById = async (id: string, userId: string): Promise<IProduct> => {
+    const product = await Product.findOne({ _id: id, createdBy: userId }).populate('createdBy', 'fullName email');
     if (!product) throw new AppError('Product not found.', 404);
     return product;
 }
 
-export const updateProduct = async (id: string, input: UpdateProductInput): Promise<IProduct> => {
+export const updateProduct = async (id: string, input: UpdateProductInput, userId: string): Promise<IProduct> => {
     // If SKU is being changed, ensure it doesn't clash with another product
     if (input.sku) {
         const existing = await Product.findOne({
@@ -93,7 +93,7 @@ export const updateProduct = async (id: string, input: UpdateProductInput): Prom
     return product;
 };
 
-export const deleteProduct = async (id: string): Promise<void> => {
-    const product = await Product.findByIdAndDelete(id);
+export const deleteProduct = async (id: string, userId: string): Promise<void> => {
+    const product = await Product.findOneAndDelete({ _id: id, createdBy: userId });
     if (!product) throw new AppError('Product not found.', 404);
 };
